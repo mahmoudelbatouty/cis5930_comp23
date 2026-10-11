@@ -25,15 +25,54 @@ in one command. For runtime only, use `python -m pip install .`.
 
 ```sh
 python -m pytest -q
-python demo.py --seed 42 --episodes 3 --policy optimal --render ansi
+python demo.py --seed 42 --episodes 3 --policy value-iteration --render ansi
+python demo.py --seed 42 --episodes 3 --policy policy-iteration --render none
+python demo.py --seed 42 --episodes 3 --policy sarsa --training-episodes 5000 --render none
+python demo.py --seed 42 --episodes 3 --policy q-learning --training-episodes 5000 --render none
 python demo.py --seed 42 --episodes 3 --policy random --render none
+python demo.py --seed 42 --episodes 1 --policy value-iteration --render human --delay 0.15
+python evaluate.py --seeds 100
 ```
 
-The default demo computes a policy by value iteration using the exact transition
-helper and gamma=0.99. This solves the discounted MDP; it does not optimize a
-finite 500-step horizon. ANSI mode shows the final board, human mode prints every
-frame, and none prints episode summaries only. Environment and action-space
-seeds are set separately; later episodes continue the existing random streams.
+The project implements four control algorithms in `icy_gridworld/algorithms.py`:
+
+- **Value iteration** and **policy iteration** use the exact transition model.
+  They solve the infinite-horizon discounted MDP with gamma=0.99 rather than a
+  finite 500-step objective.
+- **SARSA** is an on-policy temporal-difference method. Its update bootstraps
+  from the next action selected by the current epsilon-greedy behavior policy.
+- **Q-learning** is off-policy. Its update bootstraps from the largest next-state
+  action value, regardless of the exploratory action that will be taken.
+
+SARSA and Q-learning default to 3,000 training episodes, learning rate 0.1,
+epsilon 1.0 decaying by 0.997 per episode, and minimum epsilon 0.05. Pass
+`--training-episodes` and `--alpha` to the demo to change the first two settings.
+`optimal` remains accepted as an alias for `value-iteration`.
+
+ANSI mode shows the final board, human mode prints every frame, and none prints
+episode summaries only. Adding `--delay` with human mode refreshes one terminal
+grid between steps for a presentation-friendly animation. All algorithms use
+local, seeded random-number generators for reproducible experiments.
+
+## Algorithm API
+
+```python
+import gymnasium as gym
+import icy_gridworld
+
+env = gym.make("IcyGridWorld-v0")
+planned = icy_gridworld.policy_iteration(env.unwrapped)
+learned = icy_gridworld.q_learning(env, episodes=5_000, seed=42)
+
+action = int(learned.policy[380])
+print(learned.q_values[380], learned.episode_returns[-10:])
+env.close()
+```
+
+Each algorithm returns an `AlgorithmResult` containing the greedy policy, state
+values, action values, iteration/episode count, and—for model-free methods—the
+per-episode returns and lengths. `evaluate.py` trains the learning algorithms
+once and then evaluates each frozen greedy policy on the same independent seeds.
 
 ## Python usage
 

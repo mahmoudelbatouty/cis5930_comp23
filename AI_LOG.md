@@ -42,3 +42,14 @@
   truncation, and no global RNG use. Generated caches and the virtual environment
   are excluded from version control.
 - These are Codex's automated checks and review, not independent human validation.
+
+## 2026-10-10: four-algorithm extension
+
+- Codex moved value iteration into a reusable algorithms module and added exact
+  policy iteration, on-policy SARSA, and off-policy Q-learning.
+- All algorithms return a common result object with policies and diagnostics.
+  The model-free methods use seeded epsilon-greedy exploration and expose their
+  training returns and episode lengths.
+- The demo and evaluation CLIs now support all four algorithms plus the random
+  baseline. Tests cover planning agreement, model-free reproducibility, table
+  updates, output shapes, and invalid hyperparameters.

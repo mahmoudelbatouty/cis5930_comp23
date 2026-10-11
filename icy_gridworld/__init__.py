@@ -2,6 +2,13 @@
 
 from gymnasium.envs.registration import register
 
+from icy_gridworld.algorithms import (
+    AlgorithmResult,
+    policy_iteration,
+    q_learning,
+    sarsa,
+    value_iteration,
+)
 from icy_gridworld.env import IcyGridWorldEnv
 
 register(
@@ -10,4 +17,11 @@ register(
     max_episode_steps=500,
 )
 
-__all__ = ["IcyGridWorldEnv"]
+__all__ = [
+    "IcyGridWorldEnv",
+    "AlgorithmResult",
+    "policy_iteration",
+    "q_learning",
+    "sarsa",
+    "value_iteration",
+]
