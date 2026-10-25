@@ -29,12 +29,13 @@ python demo.py --seed 42 --episodes 3 --policy value-iteration --render ansi
 python demo.py --seed 42 --episodes 3 --policy policy-iteration --render none
 python demo.py --seed 42 --episodes 3 --policy sarsa --training-episodes 5000 --render none
 python demo.py --seed 42 --episodes 3 --policy q-learning --training-episodes 5000 --render none
+python demo.py --seed 42 --episodes 3 --policy dqn --dqn-training-episodes 1000 --render none
 python demo.py --seed 42 --episodes 3 --policy random --render none
 python demo.py --seed 42 --episodes 1 --policy value-iteration --render human --delay 0.15
 python evaluate.py --seeds 100
 ```
 
-The project implements four control algorithms in `icy_gridworld/algorithms.py`:
+The project implements five control algorithms:
 
 - **Value iteration** and **policy iteration** use the exact transition model.
   They solve the infinite-horizon discounted MDP with gamma=0.99 rather than a
@@ -43,10 +44,14 @@ The project implements four control algorithms in `icy_gridworld/algorithms.py`:
   from the next action selected by the current epsilon-greedy behavior policy.
 - **Q-learning** is off-policy. Its update bootstraps from the largest next-state
   action value, regardless of the exploratory action that will be taken.
+- **DQN** is off-policy and replaces the Q-table with a two-hidden-layer neural
+  network. Its NumPy implementation uses experience replay, Huber-loss updates,
+  a separate target network, and one-hot row/column state features.
 
 SARSA and Q-learning default to 3,000 training episodes, learning rate 0.1,
 epsilon 1.0 decaying by 0.997 per episode, and minimum epsilon 0.05. Pass
 `--training-episodes` and `--alpha` to the demo to change the first two settings.
+DQN defaults to 1,000 episodes; use `--dqn-training-episodes` to change it.
 `optimal` remains accepted as an alias for `value-iteration`.
 
 ANSI mode shows the final board, human mode prints every frame, and none prints
@@ -63,6 +68,7 @@ import icy_gridworld
 env = gym.make("IcyGridWorld-v0")
 planned = icy_gridworld.policy_iteration(env.unwrapped)
 learned = icy_gridworld.q_learning(env, episodes=5_000, seed=42)
+dqn_result = icy_gridworld.dqn(env, episodes=1_000, seed=42)
 
 action = int(learned.policy[380])
 print(learned.q_values[380], learned.episode_returns[-10:])

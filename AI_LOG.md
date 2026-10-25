@@ -53,3 +53,12 @@
 - The demo and evaluation CLIs now support all four algorithms plus the random
   baseline. Tests cover planning agreement, model-free reproducibility, table
   updates, output shapes, and invalid hyperparameters.
+
+## 2026-10-25: DQN extension
+
+- Codex added a framework-free NumPy DQN with two ReLU hidden layers, replay
+  memory, epsilon-greedy exploration, Huber-loss gradients, Adam optimization,
+  reward scaling, and a periodically synchronized target network.
+- DQN was added to the package API, demonstration CLI, evaluation CLI, tests,
+  and README. A 1,000-episode seeded run succeeded on all 100 evaluation seeds
+  with a mean of 48.87 steps and a mean return of 52.13.

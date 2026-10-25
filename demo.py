@@ -6,6 +6,7 @@ import time
 import gymnasium as gym
 import icy_gridworld  # Registers the environment.
 from icy_gridworld.algorithms import policy_iteration, q_learning, sarsa, value_iteration
+from icy_gridworld.dqn import dqn
 
 
 def show_animated_frame(env, episode, step, delay):
@@ -16,7 +17,9 @@ def show_animated_frame(env, episode, step, delay):
     time.sleep(delay)
 
 
-def make_policy(env, name, training_episodes, seed, alpha):
+def make_policy(
+    env, name, training_episodes, seed, alpha, dqn_training_episodes=1_000
+):
     """Create the requested policy and return it with optional training results."""
     if name == "random":
         return None, None
@@ -26,6 +29,8 @@ def make_policy(env, name, training_episodes, seed, alpha):
         result = policy_iteration(env.unwrapped)
     elif name == "sarsa":
         result = sarsa(env, episodes=training_episodes, alpha=alpha, seed=seed)
+    elif name == "dqn":
+        result = dqn(env, episodes=dqn_training_episodes, seed=seed)
     else:
         result = q_learning(env, episodes=training_episodes, alpha=alpha, seed=seed)
     return result.policy, result
@@ -38,13 +43,17 @@ def main():
     parser.add_argument(
         "--policy",
         choices=(
-            "random", "optimal", "value-iteration", "policy-iteration", "sarsa", "q-learning"
+            "random", "optimal", "value-iteration", "policy-iteration", "sarsa", "q-learning", "dqn"
         ),
         default="value-iteration",
     )
     parser.add_argument(
         "--training-episodes", type=int, default=3_000,
         help="training episodes for SARSA and Q-learning",
+    )
+    parser.add_argument(
+        "--dqn-training-episodes", type=int, default=1_000,
+        help="training episodes for DQN",
     )
     parser.add_argument("--alpha", type=float, default=0.1, help="learning rate")
     parser.add_argument("--render", choices=("none", "ansi", "human"), default="ansi")
@@ -63,6 +72,8 @@ def main():
         parser.error("--delay requires --render human")
     if args.training_episodes < 1:
         parser.error("--training-episodes must be positive")
+    if args.dqn_training_episodes < 1:
+        parser.error("--dqn-training-episodes must be positive")
     if not 0 < args.alpha <= 1:
         parser.error("--alpha must be in (0, 1]")
 
@@ -73,7 +84,12 @@ def main():
     env = gym.make("IcyGridWorld-v0", render_mode=mode)
     try:
         policy, result = make_policy(
-            env, args.policy, args.training_episodes, args.seed, args.alpha
+            env,
+            args.policy,
+            args.training_episodes,
+            args.seed,
+            args.alpha,
+            args.dqn_training_episodes,
         )
         if result is not None and result.episode_returns:
             window = min(100, len(result.episode_returns))

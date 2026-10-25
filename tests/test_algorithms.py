@@ -6,6 +6,7 @@ import pytest
 
 import icy_gridworld
 from icy_gridworld.algorithms import policy_iteration, q_learning, sarsa, value_iteration
+from icy_gridworld.dqn import dqn
 
 
 def test_planning_algorithms_agree():
@@ -57,5 +58,48 @@ def test_learning_parameter_validation(algorithm):
             algorithm(env, episodes=0)
         with pytest.raises(ValueError, match="alpha"):
             algorithm(env, alpha=0)
+    finally:
+        env.close()
+
+
+def test_dqn_updates_network_reproducibly():
+    settings = {
+        "episodes": 3,
+        "seed": 23,
+        "max_steps": 50,
+        "hidden_size": 8,
+        "replay_capacity": 100,
+        "batch_size": 8,
+        "warmup_steps": 8,
+        "train_frequency": 1,
+        "target_update_frequency": 16,
+    }
+    first = gym.make("IcyGridWorld-v0")
+    second = gym.make("IcyGridWorld-v0")
+    try:
+        one = dqn(first, **settings)
+        two = dqn(second, **settings)
+    finally:
+        first.close()
+        second.close()
+
+    assert one.policy.shape == (400,)
+    assert one.q_values.shape == (400, 4)
+    assert np.isfinite(one.q_values).all()
+    assert np.count_nonzero(one.q_values) > 0
+    assert np.array_equal(one.q_values, two.q_values)
+    assert one.episode_returns == two.episode_returns
+    assert one.episode_lengths == (50, 50, 50)
+
+
+def test_dqn_parameter_validation():
+    env = gym.make("IcyGridWorld-v0")
+    try:
+        with pytest.raises(ValueError, match="episodes"):
+            dqn(env, episodes=0)
+        with pytest.raises(ValueError, match="learning_rate"):
+            dqn(env, learning_rate=0)
+        with pytest.raises(ValueError, match="replay"):
+            dqn(env, replay_capacity=4, batch_size=8)
     finally:
         env.close()

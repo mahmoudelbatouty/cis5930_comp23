@@ -9,6 +9,7 @@ from icy_gridworld.algorithms import (
     sarsa,
     value_iteration,
 )
+from icy_gridworld.dqn import dqn
 from icy_gridworld.env import IcyGridWorldEnv
 
 register(
@@ -20,6 +21,7 @@ register(
 __all__ = [
     "IcyGridWorldEnv",
     "AlgorithmResult",
+    "dqn",
     "policy_iteration",
     "q_learning",
     "sarsa",
